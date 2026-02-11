@@ -280,13 +280,17 @@ install_cron_jobs() {
     echo "Installing cron job: $name ($expr $tz)" >&2
 
     # We install inside container (cron store is runtime state)
-    docker exec -i "$CNAME" bash -s <<EOS
+    export CRON_TARGET_NAME="$name"
+    export CRON_TARGET_EXPR="$expr"
+    export CRON_TARGET_TZ="$tz"
+    export CRON_TARGET_MSG="$payload_msg"
+    docker exec -i -e CRON_TARGET_NAME -e CRON_TARGET_EXPR -e CRON_TARGET_TZ -e CRON_TARGET_MSG "$CNAME" bash -s <<'EOS'
 set -euo pipefail
 LEGACY="git-sync push"
-TARGET_NAME="${name}"
-TARGET_EXPR="${expr}"
-TARGET_TZ="${tz}"
-TARGET_MSG="${payload_msg}"
+TARGET_NAME="${CRON_TARGET_NAME}"
+TARGET_EXPR="${CRON_TARGET_EXPR}"
+TARGET_TZ="${CRON_TARGET_TZ}"
+TARGET_MSG="${CRON_TARGET_MSG}"
 
 if ! command -v openclaw >/dev/null 2>&1; then
   echo "openclaw not found" >&2; exit 2;
