@@ -1,0 +1,96 @@
+{
+  "id": "resp_0331d88c7ebeb61d00698a05c3894c81979649f4545d701e6b",
+  "object": "response",
+  "created_at": 1770653123,
+  "status": "completed",
+  "background": false,
+  "billing": {
+    "payer": "developer"
+  },
+  "completed_at": 1770653142,
+  "error": null,
+  "frequency_penalty": 0.0,
+  "incomplete_details": null,
+  "instructions": null,
+  "max_output_tokens": null,
+  "max_tool_calls": 225,
+  "model": "o4-mini-deep-research-2025-06-26",
+  "output": [
+    {
+      "id": "rs_0331d88c7ebeb61d00698a05c3f54c8197989d8ad8b859903f",
+      "type": "reasoning",
+      "summary": []
+    },
+    {
+      "id": "ws_0331d88c7ebeb61d00698a05d454f88197b082230e19393ddc",
+      "type": "web_search_call",
+      "status": "completed",
+      "action": {
+        "type": "search",
+        "query": "\"Hello! It looks like you are\" assistant or model greeting user test"
+      }
+    },
+    {
+      "id": "rs_0331d88c7ebeb61d00698a05d4f0f0819785d7c1e8152a6f6a",
+      "type": "reasoning",
+      "summary": []
+    },
+    {
+      "id": "msg_0331d88c7ebeb61d00698a05d61cd48197aa8e820c9f2cff25",
+      "type": "message",
+      "status": "completed",
+      "content": [
+        {
+          "type": "output_text",
+          "annotations": [],
+          "logprobs": [],
+          "text": "Hello! It looks like you’re testing the chat. How can I assist you today?"
+        }
+      ],
+      "role": "assistant"
+    }
+  ],
+  "parallel_tool_calls": true,
+  "presence_penalty": 0.0,
+  "previous_response_id": null,
+  "prompt_cache_key": null,
+  "prompt_cache_retention": null,
+  "reasoning": {
+    "effort": "medium",
+    "summary": null
+  },
+  "safety_identifier": null,
+  "service_tier": "default",
+  "store": true,
+  "temperature": 1.0,
+  "text": {
+    "format": {
+      "type": "text"
+    },
+    "verbosity": "medium"
+  },
+  "tool_choice": "auto",
+  "tools": [
+    {
+      "type": "web_search_preview",
+      "search_context_size": "medium",
+      "user_location": null
+    }
+  ],
+  "top_logprobs": 0,
+  "top_p": 1.0,
+  "truncation": "disabled",
+  "usage": {
+    "input_tokens": 1821,
+    "input_tokens_details": {
+      "cached_tokens": 0
+    },
+    "output_tokens": 1078,
+    "output_tokens_details": {
+      "reasoning_tokens": 1024
+    },
+    "total_tokens": 2899
+  },
+  "user": null,
+  "metadata": {}
+}
