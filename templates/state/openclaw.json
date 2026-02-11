@@ -254,7 +254,7 @@
         "zju-codex/gpt-5.1-codex": {},
         "zju-kimi/kimi-k2-thinking": {}
       },
-      "workspace": "/Users/openclaw/.openclaw/workspace",
+      "workspace": "/root/.openclaw/workspace-ask",
       "compaction": {
         "mode": "safeguard"
       },
@@ -267,7 +267,7 @@
     "list": [
       {
         "id": "main",
-        "default": true,
+        "default": false,
         "name": "Personal Assistant",
         "subagents": {
           "allowAgents": [
@@ -285,7 +285,7 @@
       {
         "id": "ask",
         "name": "Ask (Restricted)",
-        "default": false
+        "default": true
       }
     ]
   },
