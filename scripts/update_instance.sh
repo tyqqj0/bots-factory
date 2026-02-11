@@ -87,6 +87,9 @@ if [[ ! -d "$TPL" ]]; then
   exit 1
 fi
 
+mkdir -p "$state_dir/scripts"
+rsync -a --delete "$TPL/scripts/" "$state_dir/scripts/"
+
 mkdir -p "$state_dir/workspace-main" "$state_dir/workspace-ask"
 rsync -a --delete "$TPL/workspace-main/" "$state_dir/workspace-main/"
 rsync -a --delete "$TPL/workspace-ask/"  "$state_dir/workspace-ask/"
@@ -176,6 +179,42 @@ jq \
 ' "$CONF" > "$TMP"
 
 mv "$TMP" "$CONF"
+## --- public/secrets split (factory-managed) ---
+CONF_DIR="$state_dir"
+RUNTIME_JSON="$CONF_DIR/openclaw.json"
+PUBLIC_JSON="$CONF_DIR/openclaw.public.json"
+SECRETS_JSON="$CONF_DIR/openclaw.secrets.local.json"
+EXTRACT_JQ="$CONF_DIR/scripts/extract_openclaw_secrets.jq"
+REDACT_JQ="$CONF_DIR/scripts/redact_openclaw.jq"
+MERGE_JQ="$CONF_DIR/scripts/merge_openclaw.jq"
+
+ensure_public_and_secrets() {
+  # create secrets.local if missing (from runtime)
+  if [[ ! -f "$SECRETS_JSON" ]]; then
+    jq -f "$EXTRACT_JQ" "$RUNTIME_JSON" > "$SECRETS_JSON.tmp"
+    mv "$SECRETS_JSON.tmp" "$SECRETS_JSON"
+  fi
+
+  # always enforce instance Feishu appSecret into secrets.local
+  jq --arg acct "$FEISHU_ACCOUNT_ID" --arg appSecret "$FEISHU_APP_SECRET" \
+    ".channels.feishu.accounts[\$acct].appSecret=\$appSecret" \
+    "$SECRETS_JSON" > "$SECRETS_JSON.tmp"
+  mv "$SECRETS_JSON.tmp" "$SECRETS_JSON"
+  chmod 600 "$SECRETS_JSON" 2>/dev/null || true
+
+  # generate public.json from runtime
+  jq -f "$REDACT_JQ" "$RUNTIME_JSON" > "$PUBLIC_JSON"
+
+  # regenerate runtime from public+secrets (validate merge path)
+  jq --slurpfile secrets "$SECRETS_JSON" -f "$MERGE_JQ" "$PUBLIC_JSON" > "$RUNTIME_JSON.tmp"
+  jq ".[0]" "$RUNTIME_JSON.tmp" > "$RUNTIME_JSON.tmp2"
+  mv "$RUNTIME_JSON.tmp2" "$RUNTIME_JSON"
+  rm -f "$RUNTIME_JSON.tmp"
+}
+
+ensure_public_and_secrets
+## --- end public/secrets split ---
+
 
 CNAME="openclaw-$NAME"
 if docker ps -a --format '{{.Names}}' | grep -qx "$CNAME"; then
