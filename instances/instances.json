@@ -55,6 +55,28 @@
           ]
         }
       }
+    },
+    "cron": {
+      "jobs": [
+        {
+          "name": "gitsync-daily",
+          "schedule": {
+            "kind": "cron",
+            "expr": "30 3 * * *",
+            "tz": "Asia/Shanghai"
+          },
+          "sessionTarget": "isolated",
+          "payload": {
+            "kind": "agentTurn",
+            "message": "[autolab] git-sync push",
+            "timeoutSeconds": 600
+          },
+          "delivery": {
+            "mode": "none"
+          },
+          "enabled": true
+        }
+      ]
     }
   },
   "instances": [
