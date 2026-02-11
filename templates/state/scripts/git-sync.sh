@@ -123,7 +123,7 @@ case "$cmd" in
     ensure_repo
     generate_public
     git fetch origin || true
- commit once first, then set upstream on push.
+    # If no commits yet: commit once first, then set upstream on push.
     if [[ "$(git rev-list --count HEAD 2>/dev/null || echo 0)" == "0" ]]; then
       stage_whitelist
       if ! git diff --cached --quiet; then
