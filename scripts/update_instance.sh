@@ -253,7 +253,7 @@ fi
 
 
 # --- Cron install/update (from instances/instances.json) ---
-install_cron_jobs() {
+install_cron_jobs || true() {
   LEGACY_CRON_NAME="git-sync push"
 
   # Read merged cron jobs (defaults * instance override) from factory instances.json
