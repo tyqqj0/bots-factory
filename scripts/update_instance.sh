@@ -21,7 +21,7 @@ NAME="${1:-}"
 shift || true
 
 if [[ -z "$NAME" || "$NAME" == -* ]]; then
-  echo "Usage: $0 <instance-name> [--extensions] [--recreate]" >&2
+  echo "Usage: $0 <instance-name> [--extensions] [--recreate] [--push]" >&2
   exit 1
 fi
 
@@ -83,6 +83,11 @@ fi
 # Per-instance git identity
 (cd "$state_dir" && git config user.name "$NAME")
 (cd "$state_dir" && git config user.email "$NAME@autolab-bots")
+
+if $DO_PUSH; then
+  echo "Pre-update git-sync push (snapshot current capabilities)..." >&2
+  (cd "$state_dir" && bash scripts/git-sync.sh push) || true
+fi
 
 # Update workspaces (safe-ish; v1 still uses template rsync --delete)
 # NOTE: git-sync will NOT track memory/; consider excluding memory/ from rsync later.
