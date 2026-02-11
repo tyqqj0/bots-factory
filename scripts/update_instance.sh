@@ -247,49 +247,6 @@ fi
 
 
 
-apply_profile() {
-  # Writes owner/assistant/purpose hints into workspace USER.md (main+ask)
-  local profile_json ownerName assistantName purpose quickstart block ws f
-  profile_json=$(jq -c --arg name "$NAME" '(.instances[] | select(.name==$name) | .profile // {})' "$INSTANCES_JSON")
-
-  ownerName=$(echo "$profile_json" | jq -r '.ownerName // ""')
-  assistantName=$(echo "$profile_json" | jq -r '.assistantName // ""')
-  purpose=$(echo "$profile_json" | jq -r '.purpose // ""')
-  quickstart=$(echo "$profile_json" | jq -r '.quickstart // [] | map("- " + .) | join("
-")')
-
-  block="## Bot Profile
-
-- **Owner**: ${ownerName:-}
-- **Assistant**: ${assistantName:-}
-
-**Purpose**
-${purpose:-}
-
-**Quickstart**
-${quickstart:-}
-"
-
-  for ws in "$STATE_DIR/workspace-main" "$STATE_DIR/workspace-ask"; do
-    [[ -d "$ws" ]] || continue
-    f="$ws/USER.md"
-    if [[ ! -f "$f" ]]; then
-      printf "%b
-" "$block" > "$f"
-      continue
-    fi
-    # Remove previous injected block if present
-    awk 'BEGIN{skip=0}
-         /^## Bot Profile/{skip=1; next}
-         skip && /^## /{skip=0}
-         !skip{print}' "$f" > "$f.tmp" || true
-    mv "$f.tmp" "$f"
-    printf "
-%b
-" "$block" >> "$f"
-  done
-}
-
 # --- Cron install/update (from instances/instances.json) ---
 install_cron_jobs() {
   LEGACY_CRON_NAME="git-sync push"
@@ -365,8 +322,6 @@ echo "cron ensured: $TARGET_NAME" >&2
 EOS
   done
 }
-
-apply_profile
 
 install_cron_jobs
 # --- end cron install ---
