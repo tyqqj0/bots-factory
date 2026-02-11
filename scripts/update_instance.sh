@@ -33,6 +33,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --extensions) UPDATE_EXTENSIONS=true; shift ;;
     --recreate) RECREATE=true; shift ;;
+    --push) DO_PUSH=true; shift ;;
     *) echo "Unknown arg: $1" >&2; exit 1 ;;
   esac
 done
@@ -181,6 +182,9 @@ jq \
 | (.agents.defaults.workspace) = $wsMain
 | (.agents.list[]? | select(.id=="main") | .workspace) = $wsMain
 | (.agents.list[]? | select(.id=="ask")  | .workspace) = $wsAsk
+  | (.agents.list[]? | select(.id=="ask")  | .default) = true
+  | (.agents.list[]? | select(.id=="main") | .default) = false
+  | (.agents.defaults.workspace) = $wsAsk
 | .bindings = [
     {"agentId":"main","match":{"channel":"feishu","peer":{"kind":"direct","id":$owner}}},
     {"agentId":"ask","match":{"channel":"feishu","peer":{"kind":"direct","id":"*"}}}

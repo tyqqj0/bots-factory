@@ -168,6 +168,9 @@ jq \
 | (.agents.defaults.workspace) = $wsMain
 | (.agents.list[]? | select(.id=="main") | .workspace) = $wsMain
 | (.agents.list[]? | select(.id=="ask")  | .workspace) = $wsAsk
+  | (.agents.list[]? | select(.id=="ask")  | .default) = true
+  | (.agents.list[]? | select(.id=="main") | .default) = false
+  | (.agents.defaults.workspace) = $wsAsk
 | .bindings = [
     {"agentId":"main","match":{"channel":"feishu","peer":{"kind":"direct","id":$owner}}},
     {"agentId":"ask","match":{"channel":"feishu","peer":{"kind":"direct","id":"*"}}}
