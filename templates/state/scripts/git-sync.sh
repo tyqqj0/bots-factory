@@ -122,22 +122,12 @@ case "$cmd" in
   push)
     ensure_repo
     generate_public
-    git fetch origin || true
     # If no commits yet: commit once first, then set upstream on push.
     if [[ "$(git rev-list --count HEAD 2>/dev/null || echo 0)" == "0" ]]; then
       stage_whitelist
       if ! git diff --cached --quiet; then
         msg="sync: $(date '+%F %T')"
         git commit -m "$msg" >/dev/null
-      fi
-
-      # If remote branch exists already, set upstream + rebase first.
-      if git show-ref --verify --quiet "refs/remotes/origin/$(branch_name)"; then
-        git branch --set-upstream-to="origin/$(branch_name)" "$(branch_name)" >/dev/null 2>&1 || true
-        if ! git pull --rebase origin "$(branch_name)"; then
-          print_conflict_help
-          exit 10
-        fi
       fi
 
       if git push --set-upstream origin "$(branch_name)"; then
@@ -179,7 +169,6 @@ case "$cmd" in
 
   pull)
     ensure_repo
-    git fetch origin || true
     if ! git pull --rebase; then
       print_conflict_help
       exit 10
