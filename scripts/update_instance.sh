@@ -207,9 +207,7 @@ ensure_public_and_secrets() {
 
   # regenerate runtime from public+secrets (validate merge path)
   jq --slurpfile secrets "$SECRETS_JSON" -f "$MERGE_JQ" "$PUBLIC_JSON" > "$RUNTIME_JSON.tmp"
-  jq ".[0]" "$RUNTIME_JSON.tmp" > "$RUNTIME_JSON.tmp2"
-  mv "$RUNTIME_JSON.tmp2" "$RUNTIME_JSON"
-  rm -f "$RUNTIME_JSON.tmp"
+  mv "$RUNTIME_JSON.tmp" "$RUNTIME_JSON"
 }
 
 ensure_public_and_secrets

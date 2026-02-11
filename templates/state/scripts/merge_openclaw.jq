@@ -13,4 +13,7 @@ def deepmerge(a; b):
     if b == null then a else b end
   end;
 
-deepmerge(.; $secrets)
+def normalize_secrets(s):
+  if (s|type)=="array" then (s[0] // {}) else (s // {}) end;
+
+deepmerge(.; normalize_secrets($secrets))
