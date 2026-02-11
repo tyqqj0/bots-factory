@@ -279,8 +279,13 @@ install_cron_jobs() {
     # We install inside container (cron store is runtime state)
     docker exec -i "$CNAME" bash -lc "
       set -euo pipefail
+      if ! command -v openclaw >/dev/null 2>&1; then
+        echo 'openclaw not found in container' >&2
+        exit 2
+      fi
+
       # Wait for gateway to be ready (cron CLI talks to gateway via websocket)
-      for i in $(seq 1 30); do
+      for i in \$(seq 1 30); do
         if openclaw cron list --json >/dev/null 2>&1; then
           break
         fi
