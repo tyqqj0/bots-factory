@@ -296,14 +296,14 @@ install_cron_jobs() {
 
       # Use gateway CLI output (may include logs); extract JSON part robustly
       cron_json=$(openclaw cron list --json 2>/dev/null | tr -d "
-      legacy_id=\$(echo \"\$cron_json\" | jq -r --arg n \"$LEGACY_CRON_NAME\" '.jobs[]? | select(.name==\$n) | .jobId' | head -n 1)
+      legacy_id=\$(echo \"\$cron_json\" | jq -r --arg n \"$LEGACY_CRON_NAME\" '.jobs[]? | select(.name==\$n) | .jobId // .id' | head -n 1)
       if [[ -n \"\${legacy_id:-}\" && \"\${legacy_id:-}\" != \"null\" && \"$LEGACY_CRON_NAME\" != \"$name\" ]]; then
         openclaw cron remove --job-id \"\${legacy_id}\" >/dev/null 2>&1 || true
         echo \"cron removed legacy: $LEGACY_CRON_NAME (\${legacy_id})\" >&2
         cron_json=\$(openclaw cron list --json 2>/dev/null | tr -d \"\r\" | awk 'f||/^{/{f=1}f')
       fi
 " | awk 'f||/^{/{f=1}f')
-      jid=\$(echo \"\$cron_json\" | jq -r --arg n \"$name\" '.jobs[]? | select(.name==\$n) | .jobId' | head -n 1)
+      jid=\$(echo \"\$cron_json\" | jq -r --arg n \"$name\" '.jobs[]? | select(.name==\$n) | .jobId // .id' | head -n 1)
       if [[ -n \"\${jid:-}\" && \"\${jid:-}\" != \"null\" ]]; then
         openclaw cron update --job-id \"\${jid}\" --name \"$name\" --session isolated --cron \"$expr\" --tz \"$tz\" --message \"[autolab] git-sync push\" --no-deliver >/dev/null
         echo \"cron updated: $name (\${jid})\" >&2
