@@ -123,8 +123,7 @@ case "$cmd" in
     ensure_repo
     generate_public
     git fetch origin || true
-
-    # If no commits yet: commit once first, then set upstream on push.
+ commit once first, then set upstream on push.
     if [[ "$(git rev-list --count HEAD 2>/dev/null || echo 0)" == "0" ]]; then
       stage_whitelist
       if ! git diff --cached --quiet; then
@@ -154,11 +153,8 @@ case "$cmd" in
       git branch --set-upstream-to="origin/$(branch_name)" "$(branch_name)" >/dev/null 2>&1 || true
     fi
 
-    # Always try to rebase on remote first (avoids non-fast-forward)
-    if ! git pull --rebase origin "$(branch_name)"; then
-      print_conflict_help
-      exit 10
-    fi
+    # v1: no auto-pull/rebase. Owner updates instances manually; this job only snapshots capabilities.
+    # If push is rejected (non-fast-forward), resolve manually.
 
     stage_whitelist
 
@@ -174,7 +170,7 @@ case "$cmd" in
       if git push --set-upstream origin "$(branch_name)"; then
         :
       else
-        echo "Push failed. You may need to pull/rebase or authenticate to remote." >&2
+        echo "Push failed (likely non-fast-forward). Resolve manually then push." >&2
         exit 11
       fi
     fi
