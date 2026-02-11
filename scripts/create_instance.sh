@@ -60,7 +60,8 @@ rsync -a --delete "$STATE_TPL/" "$state_dir/"
 
 # 1.5) Init git sync repo (capability-only) in state root
 # Repo URL (shared) + per-instance branch user/<name>
-GIT_REPO_URL="https://github.com/tyqqj0/autolab-bots.git"
+# Remote uses SSH host alias; requires ~/.ssh/config + key inside container
+GIT_REPO_URL="github.com-autolab-bots:tyqqj0/autolab-bots.git"
 GIT_BRANCH="user/$NAME"
 
 if [[ ! -d "$state_dir/.git" ]]; then
@@ -72,6 +73,10 @@ else
   (cd "$state_dir" && git remote set-url origin "$GIT_REPO_URL" 2>/dev/null || true)
   (cd "$state_dir" && git checkout "$GIT_BRANCH" >/dev/null 2>&1 || git checkout -b "$GIT_BRANCH" >/dev/null)
 fi
+
+# Per-instance git identity (helpful for audit)
+(cd "$state_dir" && git config user.name "$NAME")
+(cd "$state_dir" && git config user.email "$NAME@autolab-bots")
 
 # Ensure required paths exist
 ws_main="$state_dir/workspace-main"
@@ -176,6 +181,10 @@ CNAME="openclaw-$NAME"
 
 docker rm -f "$CNAME" >/dev/null 2>&1 || true
 
+SSH_DIR="$state_dir/ssh"
+mkdir -p "$SSH_DIR"
+# The deploy key + config should be provisioned into $SSH_DIR (not in git).
+
 docker run -d --name "$CNAME" \
   -p "$GW_PORT:18789" \
   -e "OPENCLAW_STATE_DIR=/root/.openclaw" \
@@ -184,6 +193,7 @@ docker run -d --name "$CNAME" \
   -e "HTTPS_PROXY=$HTTPS_PROXY" \
   -e "NO_PROXY=$NO_PROXY" \
   -v "$state_dir:/root/.openclaw" \
+  -v "$SSH_DIR:/root/.ssh:ro" \
   "$IMAGE"
 
 echo "Started $CNAME"

@@ -281,6 +281,11 @@
         "subagents": {
           "model": "zju-gemini/gemini-2.5-flash"
         }
+      },
+      {
+        "id": "ask",
+        "name": "Ask (Restricted)",
+        "default": false
       }
     ]
   },

@@ -41,6 +41,7 @@ need jq
 need docker
 need openssl
 need rsync
+need git
 
 inst_json=$(jq -c --arg name "$NAME" '.instances[] | select(.name==$name)' "$INSTANCES_JSON")
 if [[ -z "$inst_json" ]]; then
@@ -62,7 +63,24 @@ if [[ ! -f "$CONF" ]]; then
   exit 1
 fi
 
-# Update workspaces (safe; no memory/ should be in templates)
+# Ensure git sync repo is initialized (capability-only)
+GIT_REPO_URL="github.com-autolab-bots:tyqqj0/autolab-bots.git"
+GIT_BRANCH="user/$NAME"
+if [[ ! -d "$state_dir/.git" ]]; then
+  (cd "$state_dir" && git init >/dev/null)
+  (cd "$state_dir" && git remote add origin "$GIT_REPO_URL" 2>/dev/null || true)
+  (cd "$state_dir" && git checkout -b "$GIT_BRANCH" >/dev/null)
+else
+  (cd "$state_dir" && git remote set-url origin "$GIT_REPO_URL" 2>/dev/null || true)
+  (cd "$state_dir" && git checkout "$GIT_BRANCH" >/dev/null 2>&1 || git checkout -b "$GIT_BRANCH" >/dev/null)
+fi
+
+# Per-instance git identity
+(cd "$state_dir" && git config user.name "$NAME")
+(cd "$state_dir" && git config user.email "$NAME@autolab-bots")
+
+# Update workspaces (safe-ish; v1 still uses template rsync --delete)
+# NOTE: git-sync will NOT track memory/; consider excluding memory/ from rsync later.
 TPL="$ROOT_DIR/templates/state"
 if [[ ! -d "$TPL" ]]; then
   echo "Missing template dir: $TPL" >&2
@@ -165,6 +183,9 @@ if docker ps -a --format '{{.Names}}' | grep -qx "$CNAME"; then
     echo "Recreating container $CNAME"
     docker rm -f "$CNAME" >/dev/null 2>&1 || true
     IMAGE=$(echo "$merged" | jq -r '.image')
+    SSH_DIR="$state_dir/ssh"
+    mkdir -p "$SSH_DIR"
+
     docker run -d --name "$CNAME" \
       -p "$GW_PORT:18789" \
       -e "OPENCLAW_STATE_DIR=/root/.openclaw" \
@@ -173,6 +194,7 @@ if docker ps -a --format '{{.Names}}' | grep -qx "$CNAME"; then
       -e "HTTPS_PROXY=$HTTPS_PROXY" \
       -e "NO_PROXY=$NO_PROXY" \
       -v "$state_dir:/root/.openclaw" \
+      -v "$SSH_DIR:/root/.ssh:ro" \
       "$IMAGE"
   else
     echo "Restarting container $CNAME"

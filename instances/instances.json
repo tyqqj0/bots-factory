@@ -2,7 +2,7 @@
   "version": 1,
   "defaults": {
     "runtime": "orbstack-docker",
-    "image": "openclaw-factory/gateway:2026.2.9",
+    "image": "openclaw-factory/gateway:2026.2.11",
     "proxy": {
       "HTTP_PROXY": "http://host.docker.internal:7897",
       "HTTPS_PROXY": "http://host.docker.internal:7897",
@@ -25,10 +25,15 @@
     },
     "agents": {
       "main": {
-        "sandbox": { "mode": "off" }
+        "sandbox": {
+          "mode": "off"
+        }
       },
       "ask": {
-        "sandbox": { "mode": "all", "scope": "agent" },
+        "sandbox": {
+          "mode": "all",
+          "scope": "agent"
+        },
         "tools": {
           "allow": [
             "message",
@@ -58,7 +63,9 @@
       "gateway": {
         "port": 28789,
         "bind": "loopback",
-        "auth": { "mode": "token" }
+        "auth": {
+          "mode": "token"
+        }
       },
       "storage": {
         "root": "~/code/openclaw-instances/test2",

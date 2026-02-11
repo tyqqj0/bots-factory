@@ -1,0 +1,23 @@
+# --- OpenClaw state git sync ignore (capability-only) ---
+
+# Real runtime config contains secrets
+openclaw.json
+openclaw.secrets.local.json
+gateway-token.txt
+
+# Privacy / runtime state
+workspace-*/memory/
+agents/*/sessions/
+ssh/
+
+# Runtime noise
+logs/
+credentials/
+update-check.json
+.DS_Store
+*.tmp
+*.bak
+
+# Big / derived directories (v1 ignore)
+extensions/
+plugins/
