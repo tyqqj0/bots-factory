@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "defaults": {
+    "runtime": "orbstack-docker",
+    "image": "openclaw-factory/gateway:2026.2.9",
+    "proxy": {
+      "HTTP_PROXY": "http://host.docker.internal:7897",
+      "HTTPS_PROXY": "http://host.docker.internal:7897",
+      "NO_PROXY": "localhost,127.0.0.1,::1,zjuapi.com,*.zjuapi.com"
+    },
+    "zjuapi": {
+      "baseUrl": "https://zjuapi.com/v1/"
+    },
+    "feishu": {
+      "domain": "feishu",
+      "dmPolicy": "pairing",
+      "groupPolicy": "disabled",
+      "streaming": true,
+      "blockStreaming": true
+    },
+    "groups": {
+      "requireMention": true,
+      "enabled": false,
+      "allowChatIds": []
+    },
+    "agents": {
+      "main": {
+        "sandbox": { "mode": "off" }
+      },
+      "ask": {
+        "sandbox": { "mode": "all", "scope": "agent" },
+        "tools": {
+          "allow": [
+            "message",
+            "session_status",
+            "sessions_list",
+            "sessions_history",
+            "memory_search",
+            "memory_get",
+            "feishu_doc",
+            "feishu_wiki",
+            "feishu_drive"
+          ],
+          "deny": [
+            "group:runtime",
+            "group:fs",
+            "group:ui",
+            "group:nodes",
+            "group:automation"
+          ]
+        }
+      }
+    }
+  },
+  "instances": [
+    {
+      "name": "test2",
+      "gateway": {
+        "port": 28789,
+        "bind": "loopback",
+        "auth": { "mode": "token" }
+      },
+      "storage": {
+        "root": "~/code/openclaw-instances/test2",
+        "state": "${root}/state",
+        "workspaceMain": "${root}/workspace-main",
+        "workspaceAsk": "${root}/workspace-ask"
+      },
+      "feishu": {
+        "accountId": "main",
+        "appId": "cli_a90684e712799bd1",
+        "appSecret": "fYMDVebSrs2BzEmu4zBerfSqgQsK3mqT",
+        "botName": "test2"
+      },
+      "routing": {
+        "ownerOpenId": "ou_f25856d7b9582b83e1a06b8ea40c9981"
+      },
+      "notes": "MVP instance 1"
+    }
+  ]
+}
