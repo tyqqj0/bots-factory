@@ -26,6 +26,7 @@ if [[ -z "$NAME" || "$NAME" == -* ]]; then
 fi
 
 UPDATE_EXTENSIONS=false
+DO_PUSH=false
 RECREATE=false
 
 while [[ $# -gt 0 ]]; do
