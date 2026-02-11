@@ -249,6 +249,8 @@ fi
 
 # --- Cron install/update (from instances/instances.json) ---
 install_cron_jobs() {
+  LEGACY_CRON_NAME="git-sync push"
+
   # Read merged cron jobs (defaults * instance override) from factory instances.json
   local jobs_json
   jobs_json=$(jq -c --arg name "$NAME" '
@@ -293,7 +295,7 @@ install_cron_jobs() {
       done
 
       # Use gateway CLI output (may include logs); extract JSON part robustly
-      cron_json=$(openclaw cron list --json 2>/dev/null | tr -d "\r" | sed -n '/^{/,$p' )
+      cron_json=$(openclaw cron list --json 2>/dev/null | tr -d "" | awk 'f||/^{/{f=1}f')
       jid=\$(echo \"\$cron_json\" | jq -r --arg n \"$name\" '.jobs[]? | select(.name==\$n) | .jobId' | head -n 1)
       if [[ -n \"\${jid:-}\" && \"\${jid:-}\" != \"null\" ]]; then
         openclaw cron update --job-id \"\${jid}\" --name \"$name\" --session isolated --cron \"$expr\" --tz \"$tz\" --message \"[autolab] git-sync push\" --no-deliver >/dev/null
