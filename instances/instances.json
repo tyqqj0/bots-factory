@@ -105,6 +105,42 @@
         "ownerOpenId": "ou_f25856d7b9582b83e1a06b8ea40c9981"
       },
       "notes": "MVP instance 1"
+    },
+    {
+      "name": "guokaiven",
+      "gateway": {
+        "port": 28790,
+        "bind": "loopback",
+        "auth": {
+          "mode": "token"
+        }
+      },
+      "storage": {
+        "root": "~/code/openclaw-instances/guokaiven",
+        "state": "${root}/state",
+        "workspaceMain": "${root}/workspace-main",
+        "workspaceAsk": "${root}/workspace-ask"
+      },
+      "feishu": {
+        "accountId": "main",
+        "appId": "cli_a9060c499bb89cbb",
+        "appSecret": "7QFTmTtDWHDqxGUeevznhdCVqPV1ui3o",
+        "botName": "郭凯文"
+      },
+      "routing": {
+        "ownerOpenId": "ou_81f0e43c51b96691f027f5647389f418"
+      },
+      "profile": {
+        "ownerName": "郭凯文",
+        "assistantName": "郭凯文的助理",
+        "purpose": "帮助你在飞书里快速完成信息检索、文档/知识库查询、日常问答与工作流辅助（安全隔离：你是 owner，可用 main；他人默认走 ask 受限）。",
+        "quickstart": [
+          "在群里 @我 再提问（避免刷屏/回环）",
+          "你本人 DM 我：默认走 main（高权限）",
+          "其他人 DM 我：走 ask（只读/安全工具）"
+        ]
+      },
+      "notes": "new user instance"
     }
   ]
 }
