@@ -265,11 +265,12 @@ install_cron_jobs() {
 
   # Iterate jobs
   echo "$jobs_json" | jq -c '.[]?' | while read -r job; do
-    local enabled name expr tz
+    local enabled name expr tz payload_msg
     enabled=$(echo "$job" | jq -r '.enabled // true')
     name=$(echo "$job" | jq -r '.name')
     expr=$(echo "$job" | jq -r '.schedule.expr')
     tz=$(echo "$job" | jq -r '.schedule.tz // "Asia/Shanghai"')
+    payload_msg=$(echo "$job" | jq -r '.payload.message // "bash /root/.openclaw/scripts/git-sync.sh push"')
 
     if [[ "$enabled" != "true" ]]; then
       echo "cron: skip disabled job $name" >&2
