@@ -26,9 +26,9 @@ def redact_by_keyname:
 | (.channels.feishu.accounts[]? | .appSecret) = redact_value
 # Gateway token
 | (.gateway.auth.token?) = (if . == null then . else redact_value end)
-# Providers: common fields (keep object shape; only replace scalar secret fields)
-| (.models.providers[]? | select(type=="object") | .apiKey? ) |= (if . == null then . else redact_value end)
-| (.models.providers[]? | select(type=="object") | .token?  ) |= (if . == null then . else redact_value end)
-| (.models.providers[]? | select(type=="object") | .key?    ) |= (if . == null then . else redact_value end)
+# Providers: redact only known secret fields WITHOUT introducing new keys
+| (.models.providers[]? | select(type=="object") | select(has("apiKey")) | .apiKey) = redact_value
+| (.models.providers[]? | select(type=="object") | select(has("token"))  | .token ) = redact_value
+| (.models.providers[]? | select(type=="object") | select(has("key"))    | .key   ) = redact_value
 # Fallback
 | redact_by_keyname
