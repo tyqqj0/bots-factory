@@ -245,4 +245,56 @@ else
   exit 1
 fi
 
+
+
+# --- Cron install/update (from instances/instances.json) ---
+install_cron_jobs() {
+  # Read merged cron jobs (defaults * instance override) from factory instances.json
+  local jobs_json
+  jobs_json=$(jq -c --arg name "$NAME" '
+    (.defaults.cron.jobs // []) as $d
+    | (.instances[] | select(.name==$name) | .cron.jobs // []) as $i
+    | ($d + $i)
+  ' "$INSTANCES_JSON")
+
+  if [[ -z "$jobs_json" || "$jobs_json" == "null" ]]; then
+    return 0
+  fi
+
+  # Iterate jobs
+  echo "$jobs_json" | jq -c '.[]?' | while read -r job; do
+    local enabled name expr tz
+    enabled=$(echo "$job" | jq -r '.enabled // true')
+    name=$(echo "$job" | jq -r '.name')
+    expr=$(echo "$job" | jq -r '.schedule.expr')
+    tz=$(echo "$job" | jq -r '.schedule.tz // "Asia/Shanghai"')
+
+    if [[ "$enabled" != "true" ]]; then
+      echo "cron: skip disabled job $name" >&2
+      continue
+    fi
+
+    echo "Installing cron job: $name ($expr $tz)" >&2
+
+    # We install inside container (cron store is runtime state)
+    docker exec -i "$CNAME" bash -lc "
+      set -euo pipefail
+      if ! command -v openclaw >/dev/null 2>&1; then
+        echo 'openclaw not found in container' >&2
+        exit 2
+      fi
+      jid=\$(openclaw cron list --json | jq -r --arg n \"$name\" '.jobs[]? | select(.name==\$n) | .jobId' | head -n 1)
+      if [[ -n \"\${jid:-}\" && \"$jid\" != \"null\" ]]; then
+        openclaw cron update --job-id \"$jid\" --name \"$name\" --session isolated --cron \"$expr\" --tz \"$tz\" --message \"[autolab] git-sync push\" --no-deliver >/dev/null
+        echo \"cron updated: $name (\$jid)\" >&2
+      else
+        openclaw cron add --name \"$name\" --session isolated --cron \"$expr\" --tz \"$tz\" --message \"[autolab] git-sync push\" --no-deliver >/dev/null
+        echo \"cron added: $name\" >&2
+      fi
+    "
+  done
+}
+
+install_cron_jobs
+# --- end cron install ---
 echo "Updated $NAME. Gateway: http://127.0.0.1:$GW_PORT/"
