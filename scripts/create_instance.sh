@@ -14,9 +14,10 @@ set -euo pipefail
 #
 # Instance layout:
 # - <root>/state/ is mounted to /root/.openclaw
-# - <root>/state/workspace-main is mounted to /workspaces/main
-# - <root>/state/workspace-ask  is mounted to /workspaces/ask
-# - openclaw.json workspaces are pointed at /workspaces/main and /workspaces/ask
+# - Workspaces live inside state:
+#     /root/.openclaw/workspace-main
+#     /root/.openclaw/workspace-ask
+# - openclaw.json workspaces are pointed at those paths
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 INSTANCES_JSON="$ROOT_DIR/instances/instances.json"
@@ -31,6 +32,7 @@ need() { command -v "$1" >/dev/null 2>&1 || { echo "Missing dependency: $1" >&2;
 need jq
 need docker
 need openssl
+need git
 
 inst_json=$(jq -c --arg name "$NAME" '.instances[] | select(.name==$name)' "$INSTANCES_JSON")
 if [[ -z "$inst_json" ]]; then
@@ -55,6 +57,21 @@ if [[ ! -d "$STATE_TPL" ]]; then
 fi
 
 rsync -a --delete "$STATE_TPL/" "$state_dir/"
+
+# 1.5) Init git sync repo (capability-only) in state root
+# Repo URL (shared) + per-instance branch user/<name>
+GIT_REPO_URL="https://github.com/tyqqj0/autolab-bots.git"
+GIT_BRANCH="user/$NAME"
+
+if [[ ! -d "$state_dir/.git" ]]; then
+  (cd "$state_dir" && git init >/dev/null)
+  (cd "$state_dir" && git remote add origin "$GIT_REPO_URL" 2>/dev/null || true)
+  (cd "$state_dir" && git checkout -b "$GIT_BRANCH" >/dev/null)
+else
+  # Ensure branch name matches convention
+  (cd "$state_dir" && git remote set-url origin "$GIT_REPO_URL" 2>/dev/null || true)
+  (cd "$state_dir" && git checkout "$GIT_BRANCH" >/dev/null 2>&1 || git checkout -b "$GIT_BRANCH" >/dev/null)
+fi
 
 # Ensure required paths exist
 ws_main="$state_dir/workspace-main"
@@ -97,8 +114,8 @@ fi
 GW_TOKEN=$(cat "$GW_TOKEN_FILE")
 
 # Workspace paths (inside container)
-WORKSPACE_MAIN_IN="/workspaces/main"
-WORKSPACE_ASK_IN="/workspaces/ask"
+WORKSPACE_MAIN_IN="/root/.openclaw/workspace-main"
+WORKSPACE_ASK_IN="/root/.openclaw/workspace-ask"
 
 # Patch JSON using jq
 tmp="$CONF.tmp"
@@ -167,8 +184,6 @@ docker run -d --name "$CNAME" \
   -e "HTTPS_PROXY=$HTTPS_PROXY" \
   -e "NO_PROXY=$NO_PROXY" \
   -v "$state_dir:/root/.openclaw" \
-  -v "$ws_main:$WORKSPACE_MAIN_IN" \
-  -v "$ws_ask:$WORKSPACE_ASK_IN" \
   "$IMAGE"
 
 echo "Started $CNAME"

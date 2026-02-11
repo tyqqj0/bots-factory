@@ -12,7 +12,7 @@ set -euo pipefail
 # - Containers run without SSH; use docker exec.
 
 NAME="${1:-}"
-SHELL_BIN="${2:-sh}"
+SHELL_BIN="${2:-bash}"
 
 if [[ -z "$NAME" ]]; then
   echo "Usage: $0 <instance-name> [shell]" >&2

@@ -6,7 +6,9 @@ FROM node:22-bookworm-slim
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends ca-certificates curl git jq tini \
+  && apt-get install -y --no-install-recommends \
+    ca-certificates curl git jq tini \
+    bash bash-completion \
   && rm -rf /var/lib/apt/lists/*
 
 # Install OpenClaw CLI (includes gateway)
