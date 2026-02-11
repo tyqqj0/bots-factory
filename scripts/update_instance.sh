@@ -279,53 +279,42 @@ install_cron_jobs() {
     echo "Installing cron job: $name ($expr $tz)" >&2
 
     # We install inside container (cron store is runtime state)
-    docker exec -i "$CNAME" bash -lc "
-      set -euo pipefail
-      if ! command -v openclaw >/dev/null 2>&1; then
-        echo 'openclaw not found in container' >&2
-        exit 2
-      fi
+    docker exec -i "$CNAME" bash -s <<EOS
+set -euo pipefail
+LEGACY="git-sync push"
+TARGET_NAME="${name}"
+TARGET_EXPR="${expr}"
+TARGET_TZ="${tz}"
+TARGET_MSG="${payload_msg}"
 
-      # Wait for gateway to be ready (cron CLI talks to gateway via websocket)
-      for i in \$(seq 1 30); do
-        if openclaw cron list --json >/dev/null 2>&1; then
-          break
-        fi
-        sleep 1
-      done
+if ! command -v openclaw >/dev/null 2>&1; then
+  echo "openclaw not found" >&2; exit 2;
+fi
 
-      # Use gateway CLI output (may include logs); extract JSON part robustly
-      cron_json=$(openclaw cron list --json 2>/dev/null | tr -d "
-      legacy_id=\$(echo \"\$cron_json\" | jq -r --arg n \"$LEGACY_CRON_NAME\" '.jobs[]? | select(.name==\$n) | .jobId // .id' | head -n 1)
-      if [[ -n \"\${legacy_id:-}\" && \"\${legacy_id:-}\" != \"null\" && \"$LEGACY_CRON_NAME\" != \"$name\" ]]; then
-        openclaw cron remove --job-id \"\${legacy_id}\" >/dev/null 2>&1 || true
-        echo \"cron removed legacy: $LEGACY_CRON_NAME (\${legacy_id})\" >&2
-      # Remove duplicates for this job name (keep at most one)
-      dup_ids=$(echo "$cron_json" | jq -r --arg n "$name" '[.jobs[]? | select(.name==$n) | (.jobId // .id)] | .[]' )
-      if [[ -n "${dup_ids:-}" ]]; then
-        cnt=$(echo "$dup_ids" | wc -l | tr -d " ")
-        if [[ "$cnt" -gt 1 ]]; then
-          echo "cron: removing duplicate jobs for $name ($cnt)" >&2
-          while read -r did; do
-            [[ -n "$did" ]] || continue
-            openclaw cron remove --job-id "$did" >/dev/null 2>&1 || true
-          done <<< "$dup_ids"
-          cron_json=$(openclaw cron list --json 2>/dev/null | tr -d "\r" | awk 'f||/^{/{f=1}f')
-        fi
-      fi
+# wait gateway ready
+for i in $(seq 1 30); do
+  openclaw cron list --json >/dev/null 2>&1 && break || true
+  sleep 1
+done
 
-        cron_json=\$(openclaw cron list --json 2>/dev/null | tr -d \"\r\" | awk 'f||/^{/{f=1}f')
-      fi
-" | awk 'f||/^{/{f=1}f')
-      jid=\$(echo \"\$cron_json\" | jq -r --arg n \"$name\" '.jobs[]? | select(.name==\$n) | .jobId // .id' | head -n 1)
-      if [[ -n \"\${jid:-}\" && \"\${jid:-}\" != \"null\" ]]; then
-        openclaw cron update --job-id \"\${jid}\" --name \"$name\" --session isolated --cron \"$expr\" --tz \"$tz\" --message \"[autolab] git-sync push\" --no-deliver >/dev/null
-        echo \"cron updated: $name (\${jid})\" >&2
-      else
-        openclaw cron add --name \"$name\" --session isolated --cron \"$expr\" --tz \"$tz\" --message \"[autolab] git-sync push\" --no-deliver >/dev/null
-        echo \"cron added: $name\" >&2
-      fi
-    "
+cron_json=$(openclaw cron list --json 2>/dev/null | tr -d "\r" | awk 'f||/^{/{f=1}f')
+get_ids() { echo "$cron_json" | jq -r --arg n "$1" '[.jobs[]? | select(.name==$n) | (.jobId // .id)] | .[]'; }
+
+# remove legacy
+for id in $(get_ids "$LEGACY"); do
+  [[ -n "$id" ]] || continue
+  openclaw cron remove "$id" >/dev/null 2>&1 || true
+done
+
+# remove duplicates of target name (remove all, then add fresh)
+for id in $(get_ids "$TARGET_NAME"); do
+  [[ -n "$id" ]] || continue
+  openclaw cron remove "$id" >/dev/null 2>&1 || true
+done
+
+openclaw cron add --name "$TARGET_NAME" --session isolated --cron "$TARGET_EXPR" --tz "$TARGET_TZ" --message "$TARGET_MSG" --no-deliver >/dev/null
+echo "cron ensured: $TARGET_NAME" >&2
+EOS
   done
 }
 
