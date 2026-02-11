@@ -29,11 +29,27 @@ ${quickstart}
 EOF
 )
 
+# Write IDENTITY.md (assistant self identity)
+identity_block=$(cat <<EOF
+# IDENTITY
+
+- **Name:** ${assistantName}
+- **Vibe:** concise, direct
+- **Emoji:** 🦞
+
+EOF
+)
+
+for ws in "$STATE_DIR/workspace-main" "$STATE_DIR/workspace-ask"; do
+  [[ -d "$ws" ]] || continue
+  printf "%b" "$identity_block" > "$ws/IDENTITY.md"
+done
+
 for ws in "$STATE_DIR/workspace-main" "$STATE_DIR/workspace-ask"; do
   [[ -d "$ws" ]] || continue
   f="$ws/USER.md"
   if [[ ! -f "$f" ]]; then
-    printf "%s\n" "$block" > "$f"
+    printf "%b\n" "$block" > "$f"
     continue
   fi
   # Remove previous injected block (from "## Bot Profile" until next "## " header or EOF)
@@ -42,5 +58,5 @@ for ws in "$STATE_DIR/workspace-main" "$STATE_DIR/workspace-ask"; do
        skip && /^## /{skip=0}
        !skip{print}' "$f" > "$f.tmp" || true
   mv "$f.tmp" "$f"
-  printf "\n%s\n" "$block" >> "$f"
+  printf "\n%b\n" "$block" >> "$f"
 done
