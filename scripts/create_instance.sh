@@ -58,6 +58,11 @@ fi
 
 rsync -a --delete "$STATE_TPL/" "$state_dir/"
 
+# Apply instance profile hints into workspaces
+if [[ -x "$state_dir/scripts/apply-profile.sh" ]]; then
+  bash "$state_dir/scripts/apply-profile.sh" "$INSTANCES_JSON" "$NAME" "$state_dir" || true
+fi
+
 # 1.5) Init git sync repo (capability-only) in state root
 # Repo URL (shared) + per-instance branch user/<name>
 # Remote uses SSH host alias; requires ~/.ssh/config + key inside container
