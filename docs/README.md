@@ -15,24 +15,78 @@ This folder is a **template + scripts** workspace to spin up multiple isolated O
   - everyone else -> `ask`
 - Groups: require @mention (and ideally allowlist). MVP can start with groups disabled.
 
-## What is configuration vs workspace?
+## Mental model
 
-- `openclaw.json` (config):
-  - Channels (Feishu appId/secret)
-  - Models/providers registry
-  - Agents list, bindings routing rules
-  - Tool policies / sandbox policies
-  - Gateway port/bind/auth token (if exposed)
+- Each instance has a host directory:
+  - `~/code/openclaw-instances/<name>/state`
+- That directory is **bind-mounted** into the container:
+  - host `.../state` -> container `/root/.openclaw`
+- Therefore:
+  - container writes to `/root/.openclaw` are persisted on the host
+  - restarting/recreating the container does not lose memory/state
 
-- `workspace/` (per-agent brain files):
-  - Skills (`skills/`)
-  - Persona rules (`SOUL.md`, `AGENTS.md`)
-  - User profile (`USER.md`)
-  - Local notes (`TOOLS.md`)
-  - Heartbeat instructions (`HEARTBEAT.md`)
-  - Any files the agent should use
+## Templates
 
-In this MVP we will keep config in the instance state dir and mount workspaces as volumes.
+Factory keeps one primary template snapshot:
+
+- `templates/state/` = a trimmed snapshot of a normal `~/.openclaw/` root.
+  - MUST include `openclaw.json`
+  - Includes two embedded workspaces:
+    - `templates/state/workspace-main/`
+    - `templates/state/workspace-ask/`
+  - Excludes runtime/volatile by design (do not template these):
+    - `credentials/`, `logs/`, `agents/*/sessions`, etc.
+
+Notes:
+- We disable Telegram by default in the template to avoid getUpdates conflicts.
+
+## Provision / Update / Delete
+
+### Provision (create/recreate)
+Creates (or recreates) an instance from templates, patches `openclaw.json`, then runs the container.
+
+```bash
+cd ~/code/openclaw-factory
+./scripts/create_instance.sh test2
+```
+
+Batch provision:
+```bash
+./scripts/create_all.sh
+./scripts/create_all.sh --only test2,test3
+```
+
+### Update (safe, keeps runtime state)
+Updates only what we control (workspaces + config patch). Does NOT wipe the whole state.
+
+```bash
+./scripts/update_instance.sh test2
+```
+
+Optionally update extensions too:
+```bash
+./scripts/update_instance.sh test2 --extensions
+```
+
+Batch update:
+```bash
+./scripts/update_all.sh
+./scripts/update_all.sh --extensions
+./scripts/update_all.sh --only test2,test3
+```
+
+### Delete
+Default is container-only (keeps host data, memory preserved):
+
+```bash
+./scripts/delete_instance.sh test2
+```
+
+Dangerous full purge (deletes host directory too):
+
+```bash
+./scripts/delete_instance.sh test2 --purge
+```
 
 ## Proxy (Clash)
 
@@ -43,20 +97,19 @@ Example: host Clash HTTP proxy at 7897:
 - HTTP_PROXY=http://host.docker.internal:7897
 - HTTPS_PROXY=http://host.docker.internal:7897
 
-## Next steps
+## Testing checklist (single instance)
 
-1) Finalize `instances/instances.json` schema (instances list, per-instance secrets, owner open_id)
-2) Add template `templates/openclaw.json5.tpl` which embeds:
-   - env proxy vars
-   - model providers registry
-   - agents.list + bindings
-   - feishu channel config
-3) Implement scripts:
-   - create_instance.sh <name>
-   - create_all.sh
-   - update_all.sh
-4) Build image `openclaw-factory/gateway:2026.2.9` (done)
-5) Boot one instance (`test2`) and verify DM routing:
-   - owner -> main
-   - other user -> ask
+1) Confirm container is running:
+```bash
+docker ps --filter name=openclaw-test2
+```
+
+2) Watch logs:
+```bash
+docker logs -f openclaw-test2
+```
+
+3) DM routing:
+- owner DM -> `main`
+- non-owner DM -> `ask`
 
