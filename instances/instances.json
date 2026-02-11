@@ -68,7 +68,7 @@
           "sessionTarget": "isolated",
           "payload": {
             "kind": "agentTurn",
-            "message": "[autolab] git-sync push",
+            "message": "bash /root/.openclaw/scripts/git-sync.sh push",
             "timeoutSeconds": 600
           },
           "delivery": {
