@@ -74,10 +74,10 @@ GIT_BRANCH="user/$NAME"
 if [[ ! -d "$state_dir/.git" ]]; then
   (cd "$state_dir" && git init >/dev/null)
   (cd "$state_dir" && git remote add origin "$GIT_REPO_URL" 2>/dev/null || true)
-  (cd "$state_dir" && git checkout -b "$GIT_BRANCH" >/dev/null)
+  (cd "$state_dir" && git checkout -B "$GIT_BRANCH" >/dev/null)
 else
   (cd "$state_dir" && git remote set-url origin "$GIT_REPO_URL" 2>/dev/null || true)
-  (cd "$state_dir" && git checkout "$GIT_BRANCH" >/dev/null 2>&1 || git checkout -b "$GIT_BRANCH" >/dev/null)
+  (cd "$state_dir" && git checkout "$GIT_BRANCH" >/dev/null 2>&1 || git checkout -B "$GIT_BRANCH" >/dev/null)
 fi
 
 # Per-instance git identity
