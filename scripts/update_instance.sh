@@ -299,7 +299,7 @@ for i in $(seq 1 30); do
 done
 
 cron_json=$(openclaw cron list --json 2>/dev/null | tr -d "\r" | awk 'f||/^{/{f=1}f')
-get_ids() { echo "$cron_json" | jq -r --arg n "$1" '[.jobs[]? | select(.name==$n) | (.jobId // .id)] | .[]'; }
+get_ids() { local j="$1"; echo "$cron_json" | jq -r --arg n "$j" '[.jobs[]? | select(.name==$n) | (.jobId // .id)] | .[]'; }
 
 # remove legacy
 for id in $(get_ids "$LEGACY"); do
