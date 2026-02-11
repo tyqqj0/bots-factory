@@ -172,8 +172,8 @@ jq \
   | (.agents.list[]? | select(.id=="main") | .default) = false
   | (.agents.defaults.workspace) = $wsAsk
 | .bindings = [
-    {"agentId":"main","match":{"channel":"feishu","peer":{"kind":"direct","id":$owner}}},
-    {"agentId":"ask","match":{"channel":"feishu","peer":{"kind":"direct","id":"*"}}}
+    {"agentId":"main","match":{"channel":"feishu","accountId":$acct,"peer":{"kind":"direct","id":$owner}}},
+    {"agentId":"ask","match":{"channel":"feishu","accountId":$acct,"peer":{"kind":"direct","id":"*"}}}
   ]
 ' "$CONF" > "$tmp"
 
