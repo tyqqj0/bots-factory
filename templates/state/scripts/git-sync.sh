@@ -88,7 +88,7 @@ stage_whitelist() {
   # workspaces: add everything, then unstage memory
   shopt -s nullglob
   local ws
-  for ws in workspace-*; do
+  for ws in workspace workspace-*; do
     [[ -d "$ws" ]] || continue
     git add -A -- "$ws" 2>/dev/null || true
     if [[ -d "$ws/memory" ]]; then
