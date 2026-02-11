@@ -284,9 +284,9 @@ install_cron_jobs() {
         exit 2
       fi
       jid=\$(openclaw cron list --json | jq -r --arg n \"$name\" '.jobs[]? | select(.name==\$n) | .jobId' | head -n 1)
-      if [[ -n \"\${jid:-}\" && \"$jid\" != \"null\" ]]; then
-        openclaw cron update --job-id \"$jid\" --name \"$name\" --session isolated --cron \"$expr\" --tz \"$tz\" --message \"[autolab] git-sync push\" --no-deliver >/dev/null
-        echo \"cron updated: $name (\$jid)\" >&2
+      if [[ -n \"\${jid:-}\" && \"\${jid:-}\" != \"null\" ]]; then
+        openclaw cron update --job-id \"\${jid}\" --name \"$name\" --session isolated --cron \"$expr\" --tz \"$tz\" --message \"[autolab] git-sync push\" --no-deliver >/dev/null
+        echo \"cron updated: $name (\${jid})\" >&2
       else
         openclaw cron add --name \"$name\" --session isolated --cron \"$expr\" --tz \"$tz\" --message \"[autolab] git-sync push\" --no-deliver >/dev/null
         echo \"cron added: $name\" >&2
