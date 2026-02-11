@@ -292,11 +292,9 @@ install_cron_jobs() {
         sleep 1
       done
 
-      if ! command -v openclaw >/dev/null 2>&1; then
-        echo 'openclaw not found in container' >&2
-        exit 2
-      fi
-      jid=\$(openclaw cron list --json | jq -r --arg n \"$name\" '.jobs[]? | select(.name==\$n) | .jobId' | head -n 1)
+      # Use gateway CLI output (may include logs); extract JSON part robustly
+      cron_json=\$(openclaw cron list --json 2>/dev/null | tail -n 1)
+      jid=\$(echo \"\$cron_json\" | jq -r --arg n \"$name\" '.jobs[]? | select(.name==\$n) | .jobId' | head -n 1)
       if [[ -n \"\${jid:-}\" && \"\${jid:-}\" != \"null\" ]]; then
         openclaw cron update --job-id \"\${jid}\" --name \"$name\" --session isolated --cron \"$expr\" --tz \"$tz\" --message \"[autolab] git-sync push\" --no-deliver >/dev/null
         echo \"cron updated: $name (\${jid})\" >&2
