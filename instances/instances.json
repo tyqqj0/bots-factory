@@ -102,12 +102,12 @@
         "botName": "test2"
       },
       "routing": {
-        "ownerOpenId": "ou_f25856d7b9582b83e1a06b8ea40c9981"
+        "ownerOpenId": "ou_dummy_not_owner"
       },
       "notes": "MVP instance 1"
     },
     {
-      "name": "guokaiven",
+      "name": "guokaiwen",
       "gateway": {
         "port": 28790,
         "bind": "loopback",
@@ -116,7 +116,7 @@
         }
       },
       "storage": {
-        "root": "~/code/openclaw-instances/guokaiven",
+        "root": "~/code/openclaw-instances/guokaiwen",
         "state": "${root}/state",
         "workspaceMain": "${root}/workspace-main",
         "workspaceAsk": "${root}/workspace-ask"
@@ -132,7 +132,7 @@
       },
       "profile": {
         "ownerName": "郭凯文",
-        "assistantName": "郭凯文的助理",
+        "assistantName": "郭凯文的专属助理",
         "purpose": "帮助你在飞书里快速完成信息检索、文档/知识库查询、日常问答与工作流辅助（安全隔离：你是 owner，可用 main；他人默认走 ask 受限）。",
         "quickstart": [
           "在群里 @我 再提问（避免刷屏/回环）",
