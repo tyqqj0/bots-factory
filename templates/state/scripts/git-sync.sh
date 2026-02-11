@@ -61,7 +61,7 @@ extract_secrets_from_runtime_if_missing() {
 
 merge_runtime() {
   if [[ ! -f "$PUBLIC_JSON" ]]; then
-    echo "Missing $PUBLIC_JSON; run pull or push first." >&2
+    echo "Missing $PUBLIC_JSON; run pull-unsafe or push first." >&2
     exit 2
   fi
 
@@ -167,18 +167,18 @@ case "$cmd" in
     echo "Pushed $(git rev-parse --short HEAD) on $(branch_name)"
     ;;
 
-  pull)
+  pull-unsafe)
     ensure_repo
     if ! git pull --rebase; then
       print_conflict_help
       exit 10
     fi
     merge_runtime
-    echo "Pulled and regenerated openclaw.json (secrets merged locally)."
+    echo "Pulled (unsafe) and regenerated openclaw.json (secrets merged locally)."
     ;;
 
   *)
-    echo "Usage: $0 <status|push|pull>" >&2
+    echo "Usage: $0 <status|push|pull-unsafe>" >&2
     exit 1
     ;;
 esac
