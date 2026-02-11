@@ -97,6 +97,11 @@ mkdir -p "$state_dir/workspace-main" "$state_dir/workspace-ask"
 rsync -a --delete "$TPL/workspace-main/" "$state_dir/workspace-main/"
 rsync -a --delete "$TPL/workspace-ask/"  "$state_dir/workspace-ask/"
 
+# Apply instance profile hints into workspaces
+if [[ -x "$state_dir/scripts/apply-profile.sh" ]]; then
+  bash "$state_dir/scripts/apply-profile.sh" "$INSTANCES_JSON" "$NAME" "$state_dir" || true
+fi
+
 if $UPDATE_EXTENSIONS; then
   if [[ -d "$TPL/extensions" ]]; then
     mkdir -p "$state_dir/extensions"
