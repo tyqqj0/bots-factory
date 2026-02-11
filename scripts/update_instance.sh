@@ -57,6 +57,9 @@ root_expanded=$(eval echo "$root")
 state_dir="$root_expanded/state"
 
 CONF="$state_dir/openclaw.json"
+
+# Reset openclaw.json from template each update (prevents drift/truncation)
+cp "$ROOT_DIR/templates/state/openclaw.json" "$CONF"
 if [[ ! -f "$CONF" ]]; then
   echo "Missing instance state/openclaw.json at: $CONF" >&2
   echo "Run provision first: ./scripts/create_instance.sh $NAME" >&2
