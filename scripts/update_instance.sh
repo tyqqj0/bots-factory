@@ -258,7 +258,7 @@ fi
 
 
 # --- Cron install/update (from instances/instances.json) ---
-install_cron_jobs || true() {
+install_cron_jobs() {
   LEGACY_CRON_NAME="git-sync push"
 
   # Read merged cron jobs (defaults * instance override) from factory instances.json
@@ -333,6 +333,6 @@ EOS
   done
 }
 
-install_cron_jobs
+install_cron_jobs || true
 # --- end cron install ---
 echo "Updated $NAME. Gateway: http://127.0.0.1:$GW_PORT/"
