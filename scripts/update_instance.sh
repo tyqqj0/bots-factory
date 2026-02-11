@@ -300,6 +300,20 @@ install_cron_jobs() {
       if [[ -n \"\${legacy_id:-}\" && \"\${legacy_id:-}\" != \"null\" && \"$LEGACY_CRON_NAME\" != \"$name\" ]]; then
         openclaw cron remove --job-id \"\${legacy_id}\" >/dev/null 2>&1 || true
         echo \"cron removed legacy: $LEGACY_CRON_NAME (\${legacy_id})\" >&2
+      # Remove duplicates for this job name (keep at most one)
+      dup_ids=$(echo "$cron_json" | jq -r --arg n "$name" '[.jobs[]? | select(.name==$n) | (.jobId // .id)] | .[]' )
+      if [[ -n "${dup_ids:-}" ]]; then
+        cnt=$(echo "$dup_ids" | wc -l | tr -d " ")
+        if [[ "$cnt" -gt 1 ]]; then
+          echo "cron: removing duplicate jobs for $name ($cnt)" >&2
+          while read -r did; do
+            [[ -n "$did" ]] || continue
+            openclaw cron remove --job-id "$did" >/dev/null 2>&1 || true
+          done <<< "$dup_ids"
+          cron_json=$(openclaw cron list --json 2>/dev/null | tr -d "\r" | awk 'f||/^{/{f=1}f')
+        fi
+      fi
+
         cron_json=\$(openclaw cron list --json 2>/dev/null | tr -d \"\r\" | awk 'f||/^{/{f=1}f')
       fi
 " | awk 'f||/^{/{f=1}f')
